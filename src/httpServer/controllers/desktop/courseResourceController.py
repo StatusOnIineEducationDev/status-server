@@ -2,8 +2,8 @@ from flask import request, Blueprint, send_from_directory
 import json
 import os
 
-from src.http_server.config.conf import *
-from src.http_server.services.courseResourceService import CourseResourceService
+from src.httpServer.config.conf import *
+from src.httpServer.services.courseResourceService import CourseResourceService
 
 # 建立蓝图
 courseResource = Blueprint(name='courseResource', import_name=__name__)

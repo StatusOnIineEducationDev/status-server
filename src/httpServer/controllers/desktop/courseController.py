@@ -5,10 +5,10 @@ import json
 import os
 import random
 
-from src.http_server.config.conf import *
+from src.httpServer.config.conf import *
 from src.edu import *
-from src.http_server.services.courseService import CourseService
-from src.http_server.services.joinCourseService import JoinCourseService
+from src.httpServer.services.courseService import CourseService
+from src.httpServer.services.joinCourseService import JoinCourseService
 
 # 建立蓝图
 course = Blueprint(name='course', import_name=__name__)

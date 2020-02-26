@@ -1,8 +1,8 @@
 import time
 
-from src.http_server.utils.mysql import *
+from src.httpServer.utils.mysql import *
 from src.edu import *
-from src.http_server.models.joinCourse import JoinCourse
+from src.httpServer.models.joinCourse import JoinCourse
 
 
 class JoinCourseService:

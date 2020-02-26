@@ -1,6 +1,6 @@
 import pymysql
 
-from src.http_server.config.conf import *
+from src.httpServer.config.conf import *
 
 
 def getDatabaseConnection():

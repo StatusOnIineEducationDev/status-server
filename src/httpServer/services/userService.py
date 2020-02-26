@@ -1,6 +1,6 @@
-from src.http_server.utils.mysql import *
+from src.httpServer.utils.mysql import *
 from src.edu import *
-from src.http_server.models.user import User
+from src.httpServer.models.user import User
 
 
 class UserService:

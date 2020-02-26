@@ -1,6 +1,6 @@
 import redis
 
-from src.socket_server.cv_server.conf.conf import REDIS_HOST, REDIS_PORT
+from src.socketServer.cvServer.conf.conf import REDIS_HOST, REDIS_PORT
 
 
 class Redis:

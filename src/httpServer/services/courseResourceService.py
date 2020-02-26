@@ -1,8 +1,8 @@
 import time
 
-from src.http_server.utils.mysql import *
+from src.httpServer.utils.mysql import *
 from src.edu import *
-from src.http_server.models.courseResource import CourseResource
+from src.httpServer.models.courseResource import CourseResource
 
 
 class CourseResourceService:

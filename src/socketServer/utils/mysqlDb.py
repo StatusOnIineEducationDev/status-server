@@ -1,6 +1,6 @@
 import pymysql
 
-from src.socket_server.cv_server.conf.conf import MYSQL_HOST, MYSQL_USERNAME, MYSQL_PASSWORD, MYSQL_DB_NAME
+from src.socketServer.cvServer.conf.conf import MYSQL_HOST, MYSQL_USERNAME, MYSQL_PASSWORD, MYSQL_DB_NAME
 
 
 def createMysqlConnection():

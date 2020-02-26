@@ -1,8 +1,8 @@
 from flask import request, Blueprint
 import json
 
-from src.http_server.services.userService import UserService
-from src.http_server.services.courseService import CourseService
+from src.httpServer.services.userService import UserService
+from src.httpServer.services.courseService import CourseService
 
 # 建立蓝图
 user = Blueprint(name='user', import_name=__name__)
