@@ -3,10 +3,10 @@ import json
 import time
 import _thread
 
-from src.socket_server.cv_server.conf.conf import HOST, PORT
+from src.socketServer.cvServer.conf.conf import HOST, PORT
 from src.edu import TransportCmd
-from src.socket_server.cv_server.server.socket.handle_recv import handleRecvData
-from src.socket_server.cv_server.server.socket.socket_utils import send
+from src.socketServer.cvServer.server.socket.handle_recv import handleRecvData
+from src.socketServer.cvServer.server.socket.socket_utils import send
 
 
 def connect():

@@ -1,6 +1,6 @@
 import cv2
 
-from src.socket_server.cv_server.server.service.conc import detect
+from src.socketServer.cvServer.server.service.conc import detect
 
 if __name__ == '__main__':
     # 测试

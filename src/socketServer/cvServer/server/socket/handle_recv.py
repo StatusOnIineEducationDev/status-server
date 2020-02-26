@@ -1,7 +1,7 @@
-from src.socket_server.cv_server.server.service.conc import handleSingleFrame, detectConc
+from src.socketServer.cvServer.server.service.conc import handleSingleFrame, detectConc
 from src.edu import TransportCmd
-from src.socket_server.cv_server.server.socket.socket_utils import send
-from src.socket_server.cv_server.utils.base64_decode import base64ToImg
+from src.socketServer.cvServer.server.socket.socket_utils import send
+from src.socketServer.utils.base64Decode import base64ToImg
 
 
 def handleRecvData(conn, json_obj):

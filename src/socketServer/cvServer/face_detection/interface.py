@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-from src.socket_server.cv_server.face_detection import concentration_fun as Fun
+from src.socketServer.cvServer.face_detection import concentration_fun as Fun
 
 # 加载所需库文件
 loadFile = Fun.LoadFile()

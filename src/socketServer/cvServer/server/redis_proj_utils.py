@@ -1,7 +1,7 @@
 import json
 
-from src.socket_server.cv_server.utils.redis_db import Redis
-from src.socket_server.cv_server.conf.conf import REDIS_DB_NAME
+from src.socketServer.utils.redisDb import Redis
+from src.socketServer.cvServer.conf.conf import REDIS_DB_NAME
 
 
 class RedisForDetails:
@@ -9,7 +9,7 @@ class RedisForDetails:
 
         每位用户的记录在redis中以list形式存储
         一堂课的所有详细记录都将会存储在这个list中
-        仅通过一个key（format: STATUS:CONCDETAILS:UID:xxx）即可以访问到该课的所有记录
+        仅通过一个key（format: STATUS:CONC_DETAILS:UID:xxx）即可以访问到该课的所有记录
 
         由于此格式的key是以uid作为主键的，同时也没有对其他键进行维护
         因此在redis中存储的仅是一堂课中的专注度信息，课堂结束后将转储到mysql中

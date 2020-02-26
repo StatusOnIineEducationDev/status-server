@@ -1,6 +1,6 @@
-from src.socket_server.cv_server.face_detection.interface import concentration_main, concentration_calculation
-from src.socket_server.cv_server.server.redis_proj_utils import RedisForDetails, RedisForConc
-from src.socket_server.cv_server.utils.mysql_db import createMysqlConnection
+from src.socketServer.cvServer.face_detection.interface import concentration_main, concentration_calculation
+from src.socketServer.cvServer.server.redis_proj_utils import RedisForDetails, RedisForConc
+from src.socketServer.utils.mysqlDb import createMysqlConnection
 
 
 def handleSingleFrame(img, uid, course_id, lesson_id, timestamp):

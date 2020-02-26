@@ -1,9 +1,9 @@
 from flask import Flask
 
-from src.http_server.config.conf import *
-from src.http_server.controllers.desktop.courseController import course
-from src.http_server.controllers.desktop.courseResourceController import courseResource
-from src.http_server.controllers.desktop.userController import user
+from src.httpServer.config.conf import *
+from src.httpServer.controllers.desktop.courseController import course
+from src.httpServer.controllers.desktop.courseResourceController import courseResource
+from src.httpServer.controllers.desktop.userController import user
 
 app = Flask(__name__)
 # 注册蓝图

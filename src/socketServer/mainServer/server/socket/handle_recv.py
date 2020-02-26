@@ -1,10 +1,53 @@
 import time
 
-from src.edu import *
-from src.socket_server.main_server.edu_handleConnection import *
+from src.edu import TransportCmd, CourseStatus, SpeechStatus, ChatStatus
+from src.socketServer.mainServer.server.socket.socket_utils import reply
 
 
-def createLesson(server, json_obj):
+def handleRecvData(server, json_obj):
+    """ 处理接收到的数据包
+
+        根据数据包中command不同
+        作出相应的处理
+    :param server: socket服务端
+    :param json_obj: 数据包中的json格式数据
+    :return:
+    """
+    command = json_obj["command"]
+
+    if command == TransportCmd.CreateLesson:
+        handleCommandCreateLesson(server, json_obj)
+    elif command == TransportCmd.JoinInLesson:
+        joinInLesson(server, json_obj)
+    elif command == TransportCmd.BeginLesson:
+        beginLesson(server, json_obj)
+    elif command == TransportCmd.PaintCommand:
+        paintCommand(server, json_obj)
+    elif command == TransportCmd.CreatePaintConnection:
+        createPaintConnection(server, json_obj)
+    elif command == TransportCmd.ConcentrationFinalData:
+        concentrationFinalData(server, json_obj)
+    elif command == TransportCmd.StudentCameraFrameData:
+        studentCameraFrameData(server, json_obj)
+    elif command == TransportCmd.CreateCVServerConnection:
+        createCVServerConnection(server, json_obj)
+    elif command == TransportCmd.EndLesson:
+        endLesson(server, json_obj)
+    elif command == TransportCmd.SendChatContent:
+        sendChatContent(server, json_obj)
+    elif command == TransportCmd.ChatBan:
+        chatBan(server, json_obj)
+    elif command == TransportCmd.RaiseHand:
+        raiseHand(server, json_obj)
+    elif command == TransportCmd.ResultOfRaiseHand:
+        resultOfRaiseHand(server, json_obj)
+    elif command == TransportCmd.RemoveMemberFromInSpeech:
+        removeMemberFromInSpeech(server, json_obj)
+    elif command == TransportCmd.QuitLesson:
+        quitLesson(server, json_obj)
+
+
+def handleCommandCreateLesson(server, json_obj):
     course_id = json_obj["course_id"]
     course_name = json_obj["course_name"]
     uid = json_obj["uid"]
@@ -53,7 +96,7 @@ def createLesson(server, json_obj):
     server.course_id_arr.append(course_id)
 
     # 创建结果返回
-    return_info = {
+    return_data = {
         "command": TransportCmd.CreateLesson,
         "lesson_id": lesson_id,
         "course_id": course_id,
@@ -62,8 +105,7 @@ def createLesson(server, json_obj):
         "teacher_name": username,
         "create_timestamp": create_timestamp,
     }
-    server.request.send(struct.pack("!i", len(json.dumps(return_info))))
-    server.request.send(json.dumps(return_info).encode())
+    reply(server.request, return_data)
 
 
 def joinInLesson(server, json_obj):
@@ -211,6 +253,8 @@ def createPaintConnection(server, json_obj):
             reply(request=server.request, data=paint_command)
 
     print(server.paint_connection_pool)
+
+
 def concentrationFinalData(server, json_obj):
     course_id = json_obj["course_id"]
     lesson_id = json_obj["lesson_id"]
