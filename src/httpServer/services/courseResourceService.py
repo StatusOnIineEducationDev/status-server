@@ -26,12 +26,12 @@ class CourseResourceService:
         if len(res) == 0:
             err = ErrorCode.CourseResourceNotFoundError
         else:
-            dict = res[0]  # 返回是一个列表，取第一个（也只有一个）
-            course_resource = CourseResource(id=str(dict["id"]), course_id=str(dict["course_id"]), title=dict["title"],
-                                             filename=dict["filename"], type=dict["type"],
-                                             upload_timestamp=dict["upload_timestamp"],
-                                             uploader_id=str(dict["uploader_id"]),
-                                             path=dict["path"])
+            data = res[0]  # 返回是一个列表，取第一个（也只有一个）
+            course_resource = CourseResource(id=str(data["id"]), course_id=str(data["course_id"]), title=data["title"],
+                                             filename=data["filename"], type=data["type"],
+                                             upload_timestamp=data["upload_timestamp"],
+                                             uploader_id=str(data["uploader_id"]),
+                                             path=data["path"])
 
         return course_resource, err
 
@@ -61,12 +61,12 @@ class CourseResourceService:
             sql = "SELECT * FROM course_resource WHERE course_id=%s AND title=%s"
             self.cursor.execute(sql, (course_id, title))
             res = self.cursor.fetchall()
-            dict = res[0]
-            course_resource = CourseResource(id=str(dict["id"]), course_id=str(dict["course_id"]), title=dict["title"],
-                                             filename=dict["filename"], type=dict["type"],
-                                             upload_timestamp=dict["upload_timestamp"],
-                                             uploader_id=str(dict["uploader_id"]),
-                                             path=dict["path"])
+            data = res[0]
+            course_resource = CourseResource(id=str(data["id"]), course_id=str(data["course_id"]), title=data["title"],
+                                             filename=data["filename"], type=data["type"],
+                                             upload_timestamp=data["upload_timestamp"],
+                                             uploader_id=str(data["uploader_id"]),
+                                             path=data["path"])
         except pymysql.err.IntegrityError:  # 完整性约束，course_id与tile的唯一性约束
             err = ErrorCode.CourseResourceTitleDuplicateError
 
@@ -88,11 +88,11 @@ class CourseResourceService:
         if len(res) == 0:
             err = ErrorCode.CourseResourceNotFoundError
         else:
-            dict = res[0]
-            course_resource = CourseResource(id=str(dict["id"]), course_id=dict["course_id"], title=dict["title"],
-                                             filename=dict["filename"], type=dict["type"],
-                                             upload_timestamp=dict["upload_timestamp"], uploader_id=dict["uploader_id"],
-                                             path=dict["path"])
+            data = res[0]
+            course_resource = CourseResource(id=str(data["id"]), course_id=data["course_id"], title=data["title"],
+                                             filename=data["filename"], type=data["type"],
+                                             upload_timestamp=data["upload_timestamp"], uploader_id=data["uploader_id"],
+                                             path=data["path"])
 
             sql = "DELETE FROM course_resource WHERE id=%s"
             self.cursor.execute(sql, file_id)
@@ -106,7 +106,7 @@ class CourseResourceService:
         :param course_id: 课程id
         :return: 返回列表res，若无资源则为空列表
                  其中元素为字典，keys如下
-                 |-dict
+                 |-data
                     |-file_id
                     |-resource_title
                     |-filename

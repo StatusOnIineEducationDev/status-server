@@ -4,25 +4,28 @@ import struct
 from src.edu import *
 
 
-def send(connection_pool, connection, data):
+def send(connection, data):
         if isinstance(connection, list):
             for connection_temp in connection:
                 try:
                     connection_temp["socket"].send(struct.pack("!i", len(json.dumps(data))))
                     connection_temp["socket"].send(json.dumps(data).encode())
-                except ConnectionAbortedError:
-                    removeConnectionByUid(connection_pool=connection_pool, uid=connection_temp["uid"])
+                except Exception:
+                    pass
         else:
             try:
                 connection["socket"].send(struct.pack("!i", len(json.dumps(data))))
                 connection["socket"].send(json.dumps(data).encode())
-            except ConnectionAbortedError:
-                removeConnectionByUid(connection_pool=connection_pool, uid=connection["uid"])
+            except Exception:
+                pass
 
 
 def reply(request, data):
-    request.send(struct.pack("!i", len(json.dumps(data))))
-    request.send(json.dumps(data).encode())
+    try:
+        request.send(struct.pack("!i", len(json.dumps(data))))
+        request.send(json.dumps(data).encode())
+    except Exception:
+        pass
 
 
 def findLessonByLessonId(lessons, lesson_id):

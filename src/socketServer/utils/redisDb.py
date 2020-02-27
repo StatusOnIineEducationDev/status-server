@@ -23,4 +23,4 @@ class Redis:
 
     @staticmethod
     def createConnectionPool():
-        Redis.__pool = redis.ConnectionPool(host=REDIS_HOST, port=REDIS_PORT)
+        Redis.__pool = redis.ConnectionPool(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)

@@ -1,7 +1,7 @@
 import json
 
 if __name__ == '__main__':
-    record_dict = {
+    record_data = {
         'uid': '1',
         'course_id': '1',
         'lesson_id': '1',
@@ -10,5 +10,5 @@ if __name__ == '__main__':
         'conc_score': 1
     }
 
-    print(json.dumps(record_dict))
+    print(json.dumps(record_data))
 

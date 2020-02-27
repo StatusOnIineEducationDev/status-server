@@ -66,7 +66,7 @@ def Initialize():
     return sess
 
 
-def Predict(pixel, sess):
+def Predata(pixel, sess):
     """
     pixel: np.array with shape (48, 48);
     returns: np.array with shape (7,);
@@ -82,7 +82,7 @@ def Predict(pixel, sess):
     load_y = loaded_graph.get_tensor_by_name('LABEL:0')
     load_log = loaded_graph.get_tensor_by_name('LOGITS:0')
     load_keep = loaded_graph.get_tensor_by_name('KEEP:0')
-    logit = sess.run(load_log, feed_dict={
+    logit = sess.run(load_log, feed_data={
         load_x: in_data, load_y: np.zeros((8, EMO_NUM)), load_keep: 1.0
     })
     log = np.zeros((1, EMO_NUM))

@@ -26,11 +26,11 @@ class CourseService:
         if len(res) == 0:
             err = ErrorCode.CourseResourceNotFoundError
         else:
-            dict = res[0]  # 返回是一个列表，取第一个（也只有一个）
-            course = Course(id=str(dict["id"]), name=dict["name"], key=dict["key"], classify=dict["classify"],
-                            creator_id=str(dict["creator_id"]), create_timestamp=dict["create_timestamp"],
-                            status=dict["status"], notice=dict["notice"], introduction=dict["introduction"],
-                            joinable=dict["joinable"], pic_path=dict["pic_path"])
+            data = res[0]  # 返回是一个列表，取第一个（也只有一个）
+            course = Course(id=str(data["id"]), name=data["name"], key=data["key"], classify=data["classify"],
+                            creator_id=str(data["creator_id"]), create_timestamp=data["create_timestamp"],
+                            status=data["status"], notice=data["notice"], introduction=data["introduction"],
+                            joinable=data["joinable"], pic_path=data["pic_path"])
         return course, err
 
     def getCourseBasicListByUid(self, uid):
@@ -40,7 +40,7 @@ class CourseService:
         :param uid: 用户id
         :return: 返回列表res，若无课程则为空列表
                  其中元素为字典，keys如下
-                 |-dict
+                 |-data
                     |-course_id
                     |-course_name
         """
@@ -74,12 +74,12 @@ class CourseService:
         sql = "SELECT * FROM course WHERE creator_id=%s AND create_timestamp=%s"
         self.cursor.execute(sql, (creator_id, create_timestamp))
         res = self.cursor.fetchall()
-        dict = res[0]
-        course = Course(id=str(dict["id"]), name=dict["name"], key=dict["key"],
-                        classify=dict["classify"], creator_id=str(dict["creator_id"]),
-                        create_timestamp=dict["create_timestamp"], status=dict["status"],
-                        notice=dict["notice"], introduction=dict["introduction"],
-                        joinable=dict["joinable"], pic_path=dict["pic_path"])
+        data = res[0]
+        course = Course(id=str(data["id"]), name=data["name"], key=data["key"],
+                        classify=data["classify"], creator_id=str(data["creator_id"]),
+                        create_timestamp=data["create_timestamp"], status=data["status"],
+                        notice=data["notice"], introduction=data["introduction"],
+                        joinable=data["joinable"], pic_path=data["pic_path"])
         err = ErrorCode.NoError
 
         return course, err
@@ -91,12 +91,12 @@ class CourseService:
         sql = "SELECT * FROM course WHERE id=%s"
         self.cursor.execute(sql, course_id)
         res = self.cursor.fetchall()
-        dict = res[0]
-        course = Course(id=str(dict["id"]), name=dict["name"], key=dict["key"],
-                        classify=dict["classify"], creator_id=str(dict["creator_id"]),
-                        create_timestamp=dict["create_timestamp"], status=dict["status"],
-                        notice=dict["notice"], introduction=dict["introduction"],
-                        joinable=dict["joinable"], pic_path=dict["pic_path"])
+        data = res[0]
+        course = Course(id=str(data["id"]), name=data["name"], key=data["key"],
+                        classify=data["classify"], creator_id=str(data["creator_id"]),
+                        create_timestamp=data["create_timestamp"], status=data["status"],
+                        notice=data["notice"], introduction=data["introduction"],
+                        joinable=data["joinable"], pic_path=data["pic_path"])
         err = ErrorCode.NoError
 
         return course, err

@@ -17,6 +17,7 @@ class TransportCmd:
     RemoveMemberFromInSpeech = 115
     ConcentrationRealTimeData = 116
     QuitLesson = 117
+    TryToJoinIn = 118
 
 
 class ErrorCode:

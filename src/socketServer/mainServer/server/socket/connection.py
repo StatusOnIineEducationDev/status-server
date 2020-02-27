@@ -7,15 +7,10 @@ from src.socketServer.mainServer.server.socket.handle_recv import handleRecvData
 class OnlineEducationServer(socketserver.BaseRequestHandler):
     # cv服务器连接
     cv_server_connection = []
-    # 常规长连接池
-    normal_connection_pool = []
     # 课堂连接池
     lesson_connection_pool = []
     # 画板同步连接池
     paint_connection_pool = []
-    # 已创建的课堂
-    lessons = []
-    course_id_arr = []
 
     def handle(self):
         """ 循环监听接收信息
@@ -36,6 +31,7 @@ class OnlineEducationServer(socketserver.BaseRequestHandler):
         # |   DATA_LEN (4 BYTES)   |      DATA     |
         # ------------------------------------------
         while True:
+            print(self.lesson_connection_pool)
             recv_bytes += self.request.recv(1024)
             # 解析过程可归结如下：
             # ①检查上一个数据包是否已解析完毕（通过pack_len控制，pack_len表示当前包体数据长度，
@@ -63,6 +59,13 @@ class OnlineEducationServer(socketserver.BaseRequestHandler):
                     if len(recv_bytes) < 8 or pack_len != -1:
                         break
             else:
+                # 从连接池中找到该连接并剔除
+                # 这真的是一个极其愚蠢的办法
+                # 但需求至上！！！别给我整什么算法有的没的！！！
+                # 没时间学！！！也没时间写！！！！！
+                for conn in self.lesson_connection_pool:
+                    if conn['socket'] == self.request:
+                        self.lesson_connection_pool.remove(conn)
                 break
 
 

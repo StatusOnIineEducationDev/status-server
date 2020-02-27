@@ -28,15 +28,15 @@ class UserService:
         if len(res) == 0:
             err = ErrorCode.AccountNotFoundError
         else:
-            dict = res[0]  # 返回是一个列表，取第一个（也只有一个）
+            data = res[0]  # 返回是一个列表，取第一个（也只有一个）
 
-            if dict["type"] != account_type:
+            if data["type"] != account_type:
                 err = ErrorCode.AccountTypeError
-            elif dict["pwd"] != pwd:
+            elif data["pwd"] != pwd:
                 err = ErrorCode.PasswordError
             else:
-                user = User(id=str(dict["id"]), open_id=dict["open_id"], account=dict["account"],
-                            name=dict["name"], type=dict["type"],  phone_num=dict["phone_num"],
-                            pwd=dict["pwd"],  create_timestamp=dict["create_timestamp"], status=dict["status"])
+                user = User(id=str(data["id"]), open_id=data["open_id"], account=data["account"],
+                            name=data["name"], type=data["type"],  phone_num=data["phone_num"],
+                            pwd=data["pwd"],  create_timestamp=data["create_timestamp"], status=data["status"])
 
         return user, err

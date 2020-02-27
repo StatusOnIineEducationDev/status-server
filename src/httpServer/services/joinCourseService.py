@@ -21,9 +21,9 @@ class JoinCourseService:
         sql = "SELECT * FROM join_course WHERE course_id=%s AND uid=%s"
         self.cursor.execute(sql, (course_id, uid))
         res = self.cursor.fetchall()
-        dict = res[0]
-        join_course = JoinCourse(id=str(dict["id"]), course_id=str(dict["course_id"]),
-                                 uid=str(dict["uid"]), join_timestamp=dict["join_timestamp"])
+        data = res[0]
+        join_course = JoinCourse(id=str(data["id"]), course_id=str(data["course_id"]),
+                                 uid=str(data["uid"]), join_timestamp=data["join_timestamp"])
         err = ErrorCode.NoError
 
         return join_course, err

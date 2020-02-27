@@ -45,7 +45,7 @@ class RedisForDetails:
         """
         # format: STATUS:DETAILS:UID:xxx
         key = self.__DETAILS_PREFIX + ':' + uid
-        record_dict = {
+        record_data = {
             'is_succeed': is_succeed,
             'uid': uid,
             'course_id': course_id,
@@ -57,9 +57,9 @@ class RedisForDetails:
             'h_angle': h_angle,
             'v_angle': v_angle
         }
-        # redis的list中不能直接存储dict类型
-        # 需先dict转换为str
-        self.__conn.lpush(key, json.dumps(record_dict))
+        # redis的list中不能直接存储data类型
+        # 需先data转换为str
+        self.__conn.lpush(key, json.dumps(record_data))
 
     def addUsefulDetail(self, is_succeed, uid, course_id, lesson_id, timestamp, emotion,
                         is_blinked, is_yawned, h_angle, v_angle):
@@ -81,7 +81,7 @@ class RedisForDetails:
         """
         # format: STATUS:USEFUL_DETAILS:UID:xxx
         key = self.__USEFUL_DETAILS_PREFIX + ':' + uid
-        record_dict = {
+        record_data = {
             'is_succeed': is_succeed,
             'uid': uid,
             'course_id': course_id,
@@ -93,11 +93,11 @@ class RedisForDetails:
             'h_angle': h_angle,
             'v_angle': v_angle
         }
-        # redis的list中不能直接存储dict类型
-        # 需先dict转换为str
+        # redis的list中不能直接存储data类型
+        # 需先data转换为str
         #
         # 满10条记录后会返回True
-        if self.__conn.lpush(key, json.dumps(record_dict)) >= 10:
+        if self.__conn.lpush(key, json.dumps(record_data)) >= 10:
             return True
         else:
             return False
@@ -111,13 +111,13 @@ class RedisForDetails:
         """
         # format: STATUS:USEFUL_DETAILS:UID:xxx
         key = self.__USEFUL_DETAILS_PREFIX + ':' + uid
-        dict_list = []
+        data_list = []
         str_list = self.__conn.lrange(key, 0, 9)
-        for dict_str in str_list:
-            dict_list.append(json.loads(dict_str))
+        for data_str in str_list:
+            data_list.append(json.loads(data_str))
         self.__conn.delete(key)
 
-        return dict_list
+        return data_list
 
 
 class RedisForConc:
@@ -153,7 +153,7 @@ class RedisForConc:
         """
         # format: STATUS:CONC:LESSON_ID:xxx
         key = self.__PREFIX + ':' + lesson_id
-        record_dict = {
+        record_data = {
             'uid': uid,
             'course_id': course_id,
             'lesson_id': lesson_id,
@@ -161,9 +161,9 @@ class RedisForConc:
             'end_timestamp': end_timestamp,
             'conc_score': conc_score
         }
-        # redis的list中不能直接存储dict类型
-        # 需先dict转换为str
-        self.__conn.lpush(key, json.dumps(record_dict))
+        # redis的list中不能直接存储data类型
+        # 需先data转换为str
+        self.__conn.lpush(key, json.dumps(record_data))
 
     def getConcRecords(self, lesson_id):
         """ 获取该课程下课堂（lesson）的专注度信息
@@ -174,9 +174,9 @@ class RedisForConc:
         """
         # format: STATUS:CONC:LESSON_ID:xxx
         key = self.__PREFIX + ':' + lesson_id
-        dict_list = []
+        data_list = []
         str_list = self.__conn.lrange(key, 0, -1)
-        for dict_str in str_list:
-            dict_list.append(json.loads(dict_str))
+        for data_str in str_list:
+            data_list.append(json.loads(data_str))
 
-        return dict_list
+        return data_list
