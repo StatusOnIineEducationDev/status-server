@@ -11,9 +11,9 @@ import random
 
 class LoadFile:
     # 【 OpenCV函数 】
-    FACE_URL = "../face_detection/data/shape_predataor_68_face_landmarks.dat"
+    FACE_URL = "../face_detection/data/shape_predictor_68_face_landmarks.dat"
     detector = dlib.get_frontal_face_detector()
-    predataor = dlib.shape_predataor(FACE_URL)
+    predictor = dlib.shape_predictor(FACE_URL)
 
     # 【表情识别】
     cascPath = "../face_detection/data/haarcascade_frontalface_default.xml"
@@ -107,7 +107,7 @@ def get_face_points(gray):
     largest_index = get_largest_face_from_dets(dets)
     face_rectangle = dets[largest_index]
 
-    landmark_shape = LoadFile().predataor(gray, face_rectangle)
+    landmark_shape = LoadFile().predictor(gray, face_rectangle)
 
     return get_image_points_from_landmark_shape(landmark_shape)
 
@@ -311,7 +311,7 @@ def get_two_points_distance(point1, point2):
 # 参  数：灰化图像，文件库对象
 # 返回值：概率数组
 # 应  用：【表情识别】
-def predata_emotion(face_image_gray, loadFile):  # a single cropped face
+def predict_emotion(face_image_gray, loadFile):  # a single cropped face
     # print("face_image_gray:{}".format(face_image_gray))
     resized_img = cv2.resize(face_image_gray, (48, 48), interpolation=cv2.INTER_AREA)
 
@@ -321,7 +321,7 @@ def predata_emotion(face_image_gray, loadFile):  # a single cropped face
     for i in range(48):
         for j in range(48):
             pixel[i][j] = resized_img[i][j]
-    list = Predata(pixel, loadFile.sess)
+    list = Predict(pixel, loadFile.sess)
     return list
 
 
@@ -356,7 +356,7 @@ def face(gray, loadFile):
     #
     # face_image_gray = gray[y:y + h, x:x + w]
     # cv2.rectangle(gray, (x, y), (x + w, y + h), (0, 255, 0), 2)
-    # list2 = predata_emotion(face_image_gray,loadFile)
+    # list2 = predict_emotion(face_image_gray,loadFile)
     #
     # if w*h>0:
     #     return True,emotions_index[list1[np.argmax(list2)]]
@@ -366,7 +366,7 @@ def face(gray, loadFile):
     for (x, y, w, h) in faces:
         face_image_gray = gray[y:y + h, x:x + w]
         cv2.rectangle(gray, (x, y), (x + w, y + h), (0, 255, 0), 2)
-        list2 = predata_emotion(face_image_gray, loadFile)
+        list2 = predict_emotion(face_image_gray, loadFile)
 
         emotions_index_result = emotions_index[list1[np.argmax(list2)]]
         if emotions_index_result is None:
@@ -379,7 +379,7 @@ def face(gray, loadFile):
     # for (x, y, w, h) in faces:
     #     face_image_gray = gray[y:y + h, x:x + w]
     #     cv2.rectangle(gray, (x, y), (x + w, y + h), (0, 255, 0), 2)
-    #     list2 = predata_emotion(face_image_gray,loadFile)
+    #     list2 = predict_emotion(face_image_gray,loadFile)
     #
     #     emotions_num[emotions_index[list1[np.argmax(list2)]]] += 1
     #     cv2.putText(gray, list1[np.argmax(list2)], (10, 70), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
@@ -426,7 +426,7 @@ def DataPreprocess(pixel):
     return out_p
 
 
-def Predata(pixel, sess):
+def Predict(pixel, sess):
     max = pixel.max() + 0.001
     for i in range(IMAGE_SIZE):
         pixel[i] = pixel[i] / max
@@ -438,7 +438,7 @@ def Predata(pixel, sess):
     load_y = loaded_graph.get_tensor_by_name('LABEL:0')
     load_log = loaded_graph.get_tensor_by_name('LOGITS:0')
     load_keep = loaded_graph.get_tensor_by_name('KEEP:0')
-    logit = sess.run(load_log, feed_data={
+    logit = sess.run(load_log, feed_dict={
         load_x: in_data, load_y: np.zeros((8, EMO_NUM)), load_keep: 1.0
     })
     log = np.zeros((1, EMO_NUM))

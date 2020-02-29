@@ -119,6 +119,15 @@ class RedisForDetails:
 
         return data_list
 
+    def refresh(self, uid):
+        """ 为避免上次课堂的残留记录影响，重新加入需要清除一下
+
+        :param uid: 用户唯一标识
+        :return:
+        """
+        key = self.__USEFUL_DETAILS_PREFIX + ':' + str(uid)
+        self.__conn.delete(key)
+
 
 class RedisForConc:
     """ 封装有关专注度记录的数据库操作

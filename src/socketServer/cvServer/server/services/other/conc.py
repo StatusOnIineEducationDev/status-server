@@ -1,6 +1,6 @@
 from src.socketServer.cvServer.face_detection.interface import concentration_main, concentration_calculation
-from src.socketServer.cvServer.server.redis_proj_utils import RedisForDetails, RedisForConc
-from src.socketServer.utils.mysqlDb import createMysqlConnection
+from src.socketServer.cvServer.server.services.redis.rConcService import RedisForDetails, RedisForConc
+from src.socketServer.utils.mysqlDb import getMySQLSession
 
 
 def handleSingleFrame(img, uid, course_id, lesson_id, timestamp):
@@ -74,7 +74,7 @@ def dumpToMysql(lesson_id):
     :param lesson_id: 课程下课堂唯一标识
     :return:
     """
-    mysql_cursor = createMysqlConnection().cursor()
+    mysql_cursor = getMySQLSession().cursor()
 
     redis_conc = RedisForConc()
     data_list = redis_conc.getConcRecords(lesson_id)

@@ -1,7 +1,8 @@
 import socketserver
 import json
+import datetime
 
-from src.socketServer.mainServer.server.socket.handle_recv import handleRecvData
+from src.socketServer.mainServer.server.socket.handleRecv import handleRecvData
 
 
 class OnlineEducationServer(socketserver.BaseRequestHandler):
@@ -31,8 +32,13 @@ class OnlineEducationServer(socketserver.BaseRequestHandler):
         # |   DATA_LEN (4 BYTES)   |      DATA     |
         # ------------------------------------------
         while True:
-            print(self.lesson_connection_pool)
-            recv_bytes += self.request.recv(1024)
+            try:
+                recv_bytes += self.request.recv(1024)
+            except ConnectionResetError:
+                print(self.request.getsockname()[0],
+                      ' - [' + datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') + ']',
+                      ' ERR ',
+                      ConnectionResetError)
             # 解析过程可归结如下：
             # ①检查上一个数据包是否已解析完毕（通过pack_len控制，pack_len表示当前包体数据长度，
             #   非负数代表未解析完毕），如果已解析完，则进入下一步；否则退出内循环
@@ -63,6 +69,9 @@ class OnlineEducationServer(socketserver.BaseRequestHandler):
                 # 这真的是一个极其愚蠢的办法
                 # 但需求至上！！！别给我整什么算法有的没的！！！
                 # 没时间学！！！也没时间写！！！！！
+                for conn in self.cv_server_connection:
+                    if conn['socket'] == self.request:
+                        self.cv_server_connection.remove(conn)
                 for conn in self.lesson_connection_pool:
                     if conn['socket'] == self.request:
                         self.lesson_connection_pool.remove(conn)

@@ -1,11 +1,15 @@
-import time
+import datetime
 
 from src.edu import TransportCmd, CourseStatus, SpeechStatus, ChatStatus, UserStatus, AccountType
+from src.socketServer.mainServer.server.services.mysql.courseService import CourseService
 from src.socketServer.mainServer.server.services.mysql.lessonService import LessonService
+from src.socketServer.mainServer.server.services.redis.rConcService import RedisForDetails
 from src.socketServer.mainServer.server.services.redis.rCourseService import RedisForCourseStatus, RedisForCourse
 from src.socketServer.mainServer.server.services.redis.rLessonService import RedisForLessonStatus, RedisForInLesson
+from src.socketServer.mainServer.server.services.redis.rOnlineListService import RedisForOnlineList
 from src.socketServer.mainServer.server.services.redis.rUserService import RedisForUserStatus
-from src.socketServer.mainServer.server.socket.socket_utils import reply, findConnectionByLessonId, send
+from src.socketServer.mainServer.server.socket.socketUtils import reply, findConnectionByLessonId, send, \
+    findConnectionByUid
 
 
 def handleRecvData(server, json_obj):
@@ -17,9 +21,15 @@ def handleRecvData(server, json_obj):
     :param json_obj: 数据包中的json格式数据
     :return:
     """
+    print(server.request.getsockname()[0],
+          ' - [' + datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') + ']',
+          ' RECV ',
+          json_obj)
     command = json_obj["command"]
 
-    if command == TransportCmd.CreateLesson:
+    if command == TransportCmd.KeepAlive:
+        handleCommandKeepAlive(server, json_obj)
+    elif command == TransportCmd.CreateLesson:
         handleCommandCreateLesson(server, json_obj)
     elif command == TransportCmd.JoinInLesson:
         handleCommandJoinInLesson(server, json_obj)
@@ -29,12 +39,12 @@ def handleRecvData(server, json_obj):
     #     paintCommand(server, json_obj)
     # elif command == TransportCmd.CreatePaintConnection:
     #     createPaintConnection(server, json_obj)
-    # elif command == TransportCmd.ConcentrationFinalData:
-    #     concentrationFinalData(server, json_obj)
-    # elif command == TransportCmd.StudentCameraFrameData:
-    #     studentCameraFrameData(server, json_obj)
-    # elif command == TransportCmd.CreateCVServerConnection:
-    #     createCVServerConnection(server, json_obj)
+    elif command == TransportCmd.ConcentrationFinalData:
+        handleCommandConcentrationFinalData(server, json_obj)
+    elif command == TransportCmd.StudentCameraFrameData:
+        handleCommandStudentCameraFrameData(server, json_obj)
+    elif command == TransportCmd.CreateCVServerConnection:
+        handleCommandCreateCVServerConnection(server, json_obj)
     elif command == TransportCmd.EndLesson:
         handleCommandEndLesson(server, json_obj)
     elif command == TransportCmd.SendChatContent:
@@ -51,6 +61,32 @@ def handleRecvData(server, json_obj):
         handleCommandQuitLesson(server, json_obj)
     elif command == TransportCmd.TryToJoinIn:
         handleCommandTryToJoinIn(server, json_obj)
+    elif command == TransportCmd.RefreshOnlineList:
+        handleCommandRefreshOnlineList(server, json_obj)
+
+
+def handleCommandKeepAlive(server, json_obj):
+    """ 处理心跳包
+
+    :param server: socket服务端
+    :param json_obj: 必有：
+                    |- command
+                    |- type
+                    用户有：
+                    |- account_type
+                    |- timestamp
+                    |- course_id
+                    |- lesson_id
+                    |- uid
+                    |- username
+    :return:
+    """
+    if json_obj['type'] == 'user':
+        # 查询用户是否在课堂之中
+        # 如果是的话，重置redis中的key的存活时间
+        user_status = RedisForUserStatus().getUserStatus(uid=json_obj['uid'])
+        if user_status != UserStatus.Free:
+            RedisForOnlineList().refresh(lesson_id=json_obj['lesson_id'], uid=json_obj['uid'])
 
 
 def handleCommandCreateLesson(server, json_obj):
@@ -292,6 +328,9 @@ def handleCommandJoinInLesson(server, json_obj):
             elif course_status == CourseStatus.OnLine or course_status == CourseStatus.CantJoinIn:
                 RedisForUserStatus().inClass(uid=json_obj['uid'])
 
+            # 为避免上次课堂的残留记录影响，重新加入需要清除一下
+            RedisForDetails().refresh(uid=json_obj['uid'])
+
             # 长连接信息存到内存连接池
             server.socket_type = 'lesson'
             conn = {
@@ -462,6 +501,8 @@ def handleCommandEndLesson(server, json_obj):
     }
     connection_list = findConnectionByLessonId(connection_pool=server.lesson_connection_pool, lesson_id=str(lesson.id))
     send(connection=connection_list, data=send_data)
+    # 还需要给分析服务器发送
+    send(connection=server.cv_server_connection, data=send_data)
 
     # course_id = json_obj["course_id"]
     # lesson_id = json_obj["lesson_id"]
@@ -560,23 +601,54 @@ def createPaintConnection(server, json_obj):
     print(server.paint_connection_pool)
 
 
-def concentrationFinalData(server, json_obj):
-    course_id = json_obj["course_id"]
-    lesson_id = json_obj["lesson_id"]
-    uid = json_obj["uid"]
+def handleCommandConcentrationFinalData(server, json_obj):
+    """ 把接收到的分析数据返回给用户
+
+    :param server: socket服务端
+    :param json_obj:|- command
+                    |- is_succeed
+                    |- course_id
+                    |- lesson_id
+                    |- uid
+                    |- concentration_value
+                    |- emotion
+                    |- concentration_timestamp
+    :return:
+    """
 
     # 转发给相关的用户
-    connection = findConnectionByUid(connection_pool=server.lesson_connection_pool, uid=uid)
-    send(connection_pool=server.paint_connection_pool, connection=connection, data=json_obj)
+    connection = findConnectionByUid(connection_pool=server.lesson_connection_pool, uid=json_obj["uid"])
+    send(connection=connection, data=json_obj)
 
 
-def studentCameraFrameData(server, json_obj):
-    server.cv_server_connection[0].send(struct.pack("!i", len(json.dumps(json_obj))))
-    server.cv_server_connection[0].send(json.dumps(json_obj).encode())
+def handleCommandStudentCameraFrameData(server, json_obj):
+    """ 把用户的帧数据转发到分析服务器
+
+    :param server: socket服务端
+    :param json_obj:|- command
+                    |- timestamp
+                    |- course_id
+                    |- lesson_id
+                    |- uid
+                    |- username
+                    |- frame_mat
+                    |- concentration_timestamp
+    :return:
+    """
+    send(connection=server.cv_server_connection, data=json_obj)
 
 
-def createCVServerConnection(server, json_obj):
-    server.cv_server_connection.append(server.request)
+def handleCommandCreateCVServerConnection(server, json_obj):
+    """ 保存服务器连接
+
+    :param server:  socket服务端
+    :param json_obj:
+    :return:
+    """
+    conn = {
+        'socket': server.request
+    }
+    server.cv_server_connection.append(conn)
 
 
 def handleCommandSendChatContent(server, json_obj):
@@ -672,4 +744,49 @@ def removeMemberFromInSpeech(server, json_obj):
     send(connection_pool=server.paint_connection_pool, connection=connection_list, data=json_obj)
 
 
+def handleCommandRefreshOnlineList(server, json_obj):
+    """ 处理在线列表的更新工作
 
+    :param server: socket服务端
+    :param json_obj:|- command
+                    |- account_type
+                    |- timestamp
+                    |- course_id
+                    |- lesson_id
+                    |- uid
+                    |- username
+                    |- online_list
+                    |- need_username_json
+    """
+    # 准备用户名列表
+    username_json = dict()
+    has_username_json = False
+    if json_obj['need_username_json']:
+        has_username_json = True
+        tuple_list = CourseService().getAllUsername(course_id=json_obj['course_id'])
+        for data in tuple_list:
+            # data是一个元组(uid, username)
+            username_json.setdefault(str(data[0]), data[1])
+
+    # 计算在线列表
+    old_online_list = json_obj['online_list']
+    new_online_list = RedisForOnlineList().getOnlineList(lesson_id=json_obj['lesson_id'])
+
+    # new_online_list中有而old_online_list中没有的
+    add_list = list(set(new_online_list).difference(set(old_online_list)))
+    # old_online_list中有而new_online_list中没有的
+    remove_list = list(set(old_online_list).difference(set(new_online_list)))
+
+    return_data = {
+        'command': TransportCmd.RefreshOnlineList,
+        'lesson_id': json_obj['lesson_id'],
+        'course_id': json_obj['course_id'],
+        'has_username_json': has_username_json,
+        'username_json': username_json,
+        'online_list': new_online_list,
+        'add_list': add_list,
+        'remove_list': remove_list
+    }
+    print('json_obj', json_obj)
+    print('return_data', return_data)
+    reply(server.request, return_data)

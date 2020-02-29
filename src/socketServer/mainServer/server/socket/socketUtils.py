@@ -5,19 +5,19 @@ from src.edu import *
 
 
 def send(connection, data):
-        if isinstance(connection, list):
-            for connection_temp in connection:
-                try:
-                    connection_temp["socket"].send(struct.pack("!i", len(json.dumps(data))))
-                    connection_temp["socket"].send(json.dumps(data).encode())
-                except Exception:
-                    pass
-        else:
+    if isinstance(connection, list):
+        for connection_temp in connection:
             try:
-                connection["socket"].send(struct.pack("!i", len(json.dumps(data))))
-                connection["socket"].send(json.dumps(data).encode())
+                connection_temp["socket"].send(struct.pack("!i", len(json.dumps(data))))
+                connection_temp["socket"].send(json.dumps(data).encode())
             except Exception:
                 pass
+    else:
+        try:
+            connection["socket"].send(struct.pack("!i", len(json.dumps(data))))
+            connection["socket"].send(json.dumps(data).encode())
+        except Exception:
+            pass
 
 
 def reply(request, data):

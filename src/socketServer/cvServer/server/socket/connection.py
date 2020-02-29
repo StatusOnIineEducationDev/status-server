@@ -5,8 +5,8 @@ import _thread
 
 from src.socketServer.cvServer.conf.conf import HOST, PORT
 from src.edu import TransportCmd
-from src.socketServer.cvServer.server.socket.handle_recv import handleRecvData
-from src.socketServer.cvServer.server.socket.socket_utils import send
+from src.socketServer.cvServer.server.socket.handleRecv import handleRecvData
+from src.socketServer.cvServer.server.socket.socketUtils import send
 
 
 def connect():
@@ -25,9 +25,11 @@ def connect():
     send(conn, request_data)
 
     # 心跳机制
-    _thread.start_new_thread(keepAlive, (conn,))
+    # _thread.start_new_thread(keepAlive, (conn,))
     # 开始循环监听
-    _thread.start_new_thread(recv, (conn,))
+    # _thread.start_new_thread(recv, (conn,))
+    recv(conn)
+    conn.detach()
 
 
 def recv(conn):

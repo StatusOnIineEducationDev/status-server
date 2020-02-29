@@ -1,4 +1,4 @@
-from src.socketServer.cvServer.server.service.conc import dumpToMysql
+from src.socketServer.cvServer.server.services.conc import dumpToMysql
 
 if __name__ == '__main__':
     # # 测试

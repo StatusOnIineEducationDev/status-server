@@ -1,4 +1,5 @@
 class TransportCmd:
+    KeepAlive = 0
     TestCommand = 100
     ConcentrationFinalData = 101
     StudentCameraFrameData = 102
@@ -18,6 +19,8 @@ class TransportCmd:
     ConcentrationRealTimeData = 116
     QuitLesson = 117
     TryToJoinIn = 118
+    RefreshOnlineList = 119
+    GetStudentConc = 120
 
 
 class ErrorCode:
