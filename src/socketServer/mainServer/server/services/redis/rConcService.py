@@ -9,12 +9,12 @@ class RedisForDetails:
 
         每位用户的记录在redis中以list形式存储
         一堂课的所有详细记录都将会存储在这个list中
-        仅通过一个key（format: STATUS:CONC_DETAILS:UID:xxx）即可以访问到该课的所有记录
 
-        由于此格式的key是以uid作为主键的，同时也没有对其他键进行维护
-        因此在redis中存储的仅是一堂课中的专注度信息，课堂结束后将转储到mysql中
+        key format: STATUS:CONC_DETAILS:ID:(lesson_id)_(uid)
+        key format: STATUS:CONC_USEFUL_DETAILS:ID:(lesson_id)_(uid)
+        这个key的用法实际上并不是很好，但是能实现需求
     """
-    __PRIMARY_KEY = 'UID'
+    __PRIMARY_KEY = 'ID'
 
     __DETAILS = 'CONC_DETAILS'
     __USEFUL_DETAILS = 'CONC_USEFUL_DETAILS'
@@ -43,8 +43,8 @@ class RedisForDetails:
         :param v_angle: 头部的垂直转动角度
         :return:
         """
-        # format: STATUS:DETAILS:UID:xxx
-        key = self.__DETAILS_PREFIX + ':' + uid
+        # format: STATUS:CONC_DETAILS:ID:(lesson_id)_(uid)
+        key = self.__DETAILS_PREFIX + ':' + str(lesson_id) + '_' + str(uid)
         record_data = {
             'is_succeed': is_succeed,
             'uid': uid,
@@ -79,8 +79,8 @@ class RedisForDetails:
             满10条记录后会返回True，以及10条json格式数据列表
             否则返回False，以及返回[]
         """
-        # format: STATUS:USEFUL_DETAILS:UID:xxx
-        key = self.__USEFUL_DETAILS_PREFIX + ':' + uid
+        # format: STATUS:CONC_USEFUL_DETAILS:ID:(lesson_id)_(uid)
+        key = self.__USEFUL_DETAILS_PREFIX + ':' + str(lesson_id) + '_' + str(uid)
         record_data = {
             'is_succeed': is_succeed,
             'uid': uid,
@@ -102,15 +102,16 @@ class RedisForDetails:
         else:
             return False
 
-    def getUsefulDetails(self, uid):
+    def getUsefulDetails(self, lesson_id, uid):
         """ 获取并清空可用的十条详细记录
 
+        :param lesson_id: 课程下课堂唯一标识
         :param uid: 用户唯一标识
         :return:
             json格式数据
         """
-        # format: STATUS:USEFUL_DETAILS:UID:xxx
-        key = self.__USEFUL_DETAILS_PREFIX + ':' + uid
+        # format: STATUS:CONC_USEFUL_DETAILS:ID:(lesson_id)_(uid)
+        key = self.__USEFUL_DETAILS_PREFIX + ':' + str(lesson_id) + '_' + str(uid)
         data_list = []
         str_list = self.__conn.lrange(key, 0, 9)
         for data_str in str_list:
@@ -119,14 +120,16 @@ class RedisForDetails:
 
         return data_list
 
-    def refresh(self, uid):
-        """ 为避免上次课堂的残留记录影响，重新加入需要清除一下
+    def clear(self, lesson_id, uid):
+        """ 清除用户有关key
 
+        :param lesson_id: 课程下课堂唯一标识
         :param uid: 用户唯一标识
         :return:
         """
-        key = self.__USEFUL_DETAILS_PREFIX + ':' + str(uid)
-        self.__conn.delete(key)
+        key_1 = self.__USEFUL_DETAILS_PREFIX + ':' + str(lesson_id) + '_' + str(uid)
+        key_2 = self.__DETAILS_PREFIX + ':' + str(lesson_id) + '_' + str(uid)
+        self.__conn.delete(key_1, key_2)
 
 
 class RedisForConc:
@@ -134,16 +137,17 @@ class RedisForConc:
 
         每位用户的记录在redis中以list形式存储
         一堂课的所有详细记录都将会存储在这个list中
-        仅通过一个key（format: STATUS:CONCDETAILS:UID:xxx）即可以访问到该课的所有记录
-
-        由于此格式的key是以uid作为主键的，同时也没有对其他键进行维护
-        因此在redis中存储的仅是一堂课中的专注度信息，课堂结束后将转储到mysql中
+        仅通过一个key（format: STATUS:CONC:LESSON_ID:xxx）即可以访问到该课的所有记录
+        或通过一个key（format: STATUS:CONC:ID:(lesson_id)_(uid)）即可以访问到该用户的记录
+        这个key的用法实际上并不是很好，但是能实现需求
     """
     __PRIMARY_KEY = 'LESSON_ID'
+    __PRIMARY_KEY_ID = 'ID'
 
     __CONC = 'CONC'
 
     __PREFIX = REDIS_DB_NAME + ':' + __CONC + ':' + __PRIMARY_KEY
+    __PREFIX_ID = REDIS_DB_NAME + ':' + __CONC + ':' + __PRIMARY_KEY_ID
 
     def __init__(self):
         self.__conn = Redis().conn
@@ -160,8 +164,6 @@ class RedisForConc:
         :param conc_score: 专注度评分
         :return:
         """
-        # format: STATUS:CONC:LESSON_ID:xxx
-        key = self.__PREFIX + ':' + lesson_id
         record_data = {
             'uid': uid,
             'course_id': course_id,
@@ -170,8 +172,13 @@ class RedisForConc:
             'end_timestamp': end_timestamp,
             'conc_score': conc_score
         }
+        # format: STATUS:CONC:LESSON_ID:xxx
+        key = self.__PREFIX + ':' + str(lesson_id)
         # redis的list中不能直接存储data类型
         # 需先data转换为str
+        self.__conn.lpush(key, json.dumps(record_data))
+        # format: STATUS:CONC:ID:(lesson_id)_(uid)
+        key = self.__PREFIX_ID + ':' + str(lesson_id) + '_' + str(uid)
         self.__conn.lpush(key, json.dumps(record_data))
 
     def getConcRecords(self, lesson_id):
@@ -182,10 +189,27 @@ class RedisForConc:
             json格式数据
         """
         # format: STATUS:CONC:LESSON_ID:xxx
-        key = self.__PREFIX + ':' + lesson_id
+        key = self.__PREFIX + ':' + str(lesson_id)
         data_list = []
         str_list = self.__conn.lrange(key, 0, -1)
         for data_str in str_list:
             data_list.append(json.loads(data_str))
 
         return data_list
+
+    def getLastConcRecordByUid(self, lesson_id, uid):
+        """ 获取该用户的最新一条专注度信息
+
+        :param lesson_id: 课程下课堂唯一标识
+        :param uid: 用户唯一标识
+        :return:
+            json格式数据
+        """
+        # format: STATUS:CONC:ID:(lesson_id)_(uid)
+        key = self.__PREFIX_ID + ':' + str(lesson_id) + '_' + str(uid)
+
+        record = self.__conn.lindex(key, -1)
+        if record is not None:
+            return json.loads(self.__conn.lindex(key, 0))
+        else:
+            return None

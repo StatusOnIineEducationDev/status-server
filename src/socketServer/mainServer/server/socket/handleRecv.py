@@ -3,7 +3,7 @@ import datetime
 from src.edu import TransportCmd, CourseStatus, SpeechStatus, ChatStatus, UserStatus, AccountType
 from src.socketServer.mainServer.server.services.mysql.courseService import CourseService
 from src.socketServer.mainServer.server.services.mysql.lessonService import LessonService
-from src.socketServer.mainServer.server.services.redis.rConcService import RedisForDetails
+from src.socketServer.mainServer.server.services.redis.rConcService import RedisForDetails, RedisForConc
 from src.socketServer.mainServer.server.services.redis.rCourseService import RedisForCourseStatus, RedisForCourse
 from src.socketServer.mainServer.server.services.redis.rLessonService import RedisForLessonStatus, RedisForInLesson
 from src.socketServer.mainServer.server.services.redis.rOnlineListService import RedisForOnlineList
@@ -22,32 +22,40 @@ def handleRecvData(server, json_obj):
     :return:
     """
     print(server.request.getsockname()[0],
-          ' - [' + datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') + ']',
-          ' RECV ',
-          json_obj)
+          '- [' + datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') + ']',
+          ' RECV ')
     command = json_obj["command"]
 
     if command == TransportCmd.KeepAlive:
+        print('Command: ', 'KeepAlive')
         handleCommandKeepAlive(server, json_obj)
     elif command == TransportCmd.CreateLesson:
+        print('Command: ', 'CreateLesson')
         handleCommandCreateLesson(server, json_obj)
     elif command == TransportCmd.JoinInLesson:
+        print('Command: ', 'JoinInLesson')
         handleCommandJoinInLesson(server, json_obj)
     elif command == TransportCmd.BeginLesson:
+        print('Command: ', 'BeginLesson')
         handleCommandBeginLesson(server, json_obj)
     # elif command == TransportCmd.PaintCommand:
     #     paintCommand(server, json_obj)
     # elif command == TransportCmd.CreatePaintConnection:
     #     createPaintConnection(server, json_obj)
     elif command == TransportCmd.ConcentrationFinalData:
+        print('Command: ', 'ConcentrationFinalData')
         handleCommandConcentrationFinalData(server, json_obj)
     elif command == TransportCmd.StudentCameraFrameData:
+        print('Command: ', 'StudentCameraFrameData')
         handleCommandStudentCameraFrameData(server, json_obj)
     elif command == TransportCmd.CreateCVServerConnection:
+        print('Command: ', 'CreateCVServerConnection')
         handleCommandCreateCVServerConnection(server, json_obj)
     elif command == TransportCmd.EndLesson:
+        print('Command: ', 'EndLesson')
         handleCommandEndLesson(server, json_obj)
     elif command == TransportCmd.SendChatContent:
+        print('Command: ', 'SendChatContent')
         handleCommandSendChatContent(server, json_obj)
     # elif command == TransportCmd.ChatBan:
     #     chatBan(server, json_obj)
@@ -58,11 +66,19 @@ def handleRecvData(server, json_obj):
     # elif command == TransportCmd.RemoveMemberFromInSpeech:
     #     removeMemberFromInSpeech(server, json_obj)
     elif command == TransportCmd.QuitLesson:
+        print('Command: ', 'QuitLesson')
         handleCommandQuitLesson(server, json_obj)
     elif command == TransportCmd.TryToJoinIn:
+        print('Command: ', 'TryToJoinIn')
         handleCommandTryToJoinIn(server, json_obj)
     elif command == TransportCmd.RefreshOnlineList:
+        print('Command: ', 'RefreshOnlineList')
         handleCommandRefreshOnlineList(server, json_obj)
+    elif command == TransportCmd.GetStudentConc:
+        print('Command: ', 'GetStudentConc')
+        handleCommandGetStudentConc(server, json_obj)
+
+    print(json_obj)
 
 
 def handleCommandKeepAlive(server, json_obj):
@@ -327,9 +343,6 @@ def handleCommandJoinInLesson(server, json_obj):
                 RedisForUserStatus().inRoom(uid=json_obj['uid'])
             elif course_status == CourseStatus.OnLine or course_status == CourseStatus.CantJoinIn:
                 RedisForUserStatus().inClass(uid=json_obj['uid'])
-
-            # 为避免上次课堂的残留记录影响，重新加入需要清除一下
-            RedisForDetails().refresh(uid=json_obj['uid'])
 
             # 长连接信息存到内存连接池
             server.socket_type = 'lesson'
@@ -787,6 +800,38 @@ def handleCommandRefreshOnlineList(server, json_obj):
         'add_list': add_list,
         'remove_list': remove_list
     }
-    print('json_obj', json_obj)
-    print('return_data', return_data)
+
     reply(server.request, return_data)
+
+
+def handleCommandGetStudentConc(server, json_obj):
+    """ 获取指定学生的专注度信息
+
+    :param server: socket服务端
+    :param json_obj:|- command
+                    |- account_type
+                    |- timestamp
+                    |- course_id
+                    |- lesson_id
+                    |- uid
+                    |- username
+    :return:
+    """
+    # 全班专注度信息汇总
+    if json_obj['checked_uid'] == 'lesson':
+        return_data = None
+    else:
+        # json: uid、course_id、lesson_id、begin_timestamp、end_timestamp、conc_score
+        record = RedisForConc().getLastConcRecordByUid(lesson_id=json_obj['lesson_id'], uid=json_obj['checked_uid'])
+        if record is not None:
+            return_data = {
+                'command': TransportCmd.GetStudentConc,
+                'course_id': record['course_id'],
+                'lesson_id': record['lesson_id'],
+                'checked_uid': record['uid'],
+                'concentration_value': int(record['conc_score'] * 100),
+                'concentration_timestamp': record['end_timestamp']
+            }
+
+            reply(server.request, return_data)
+

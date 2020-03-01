@@ -47,7 +47,7 @@ def handleCommandStudentCameraFrameData(conn, json_obj):
                                                      lesson_id=json_obj['lesson_id'],
                                                      timestamp=json_obj['concentration_timestamp'])
     if is_full:
-        conc_score = int(detectConc(json_obj['uid']) * 100)  # 返回的是一个小数
+        conc_score = int(detectConc(lesson_id=json_obj['lesson_id'], uid=json_obj['uid']) * 100)  # 返回的是一个小数
 
     return_data = {
         'command': TransportCmd.ConcentrationFinalData,
@@ -59,7 +59,6 @@ def handleCommandStudentCameraFrameData(conn, json_obj):
         'emotion': emotion,
         'concentration_timestamp': json_obj["concentration_timestamp"]
     }
-    print(return_data)
     send(conn, return_data)
 
 

@@ -32,15 +32,16 @@ def handleSingleFrame(img, uid, course_id, lesson_id, timestamp):
     return is_full, is_succeed, emotion_index
 
 
-def detectConc(uid):
+def detectConc(lesson_id, uid):
     """ 计算专注度得分
 
+    :param lesson_id: 课程下课堂唯一标识
     :param uid: 用户唯一标识
     :return:
     """
     redis_conc = RedisForConc()
     redis_details = RedisForDetails()
-    data_list = redis_details.getUsefulDetails(uid)
+    data_list = redis_details.getUsefulDetails(lesson_id=lesson_id, uid=uid)
 
     emotion_arr = [0, 0, 0, 0, 0, 0, 0]
     blink_times = 0
