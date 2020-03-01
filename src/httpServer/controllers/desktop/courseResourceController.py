@@ -2,8 +2,8 @@ from flask import request, Blueprint, send_from_directory
 import json
 import os
 
-from src.httpServer.config.conf import *
-from src.httpServer.services.courseResourceService import CourseResourceService
+from src.httpServer.conf.conf import COURSE_RESOURCE_PATH
+from src.httpServer.services.mysql.courseResourceService import CourseResourceService
 
 # 建立蓝图
 courseResource = Blueprint(name='courseResource', import_name=__name__)
@@ -24,8 +24,7 @@ def getCourseResourceList():
     """
     request_data = json.loads(request.form["json"])
 
-    course_resource_service = CourseResourceService()
-    res, err = course_resource_service.getCourseResourceListByCourseId(course_id=request_data["course_id"])
+    res, err = CourseResourceService().getCourseResourceListByCourseId(course_id=int(request_data["course_id"]))
     return_data = {
         "error_code": err,
         "file_info_list": res
@@ -49,12 +48,12 @@ def downloadCourseResource():
     request_data = json.loads(request.form["json"])
 
     course_resource_service = CourseResourceService()
-    course_resource, err = course_resource_service.getCourseResourceByFileId(file_id=request_data["file_id"])
+    course_resource, err = course_resource_service.getCourseResourceByFileId(file_id=int(request_data["file_id"]))
 
-    directory = COURSE_RESOURCE_PATH + "/" + course_resource.course_id + "/" + course_resource.title
+    directory = COURSE_RESOURCE_PATH + "/" + str(course_resource.course_id) + "/" + str(course_resource.title)
 
     return send_from_directory(directory=directory,
-                               filename=course_resource.filename,
+                               filename=str(course_resource.filename),
                                as_attachment=True)
 
 
@@ -88,7 +87,7 @@ def uploadCourseResource():
     request_file.save(file_absolute_path)
 
     course_resource_service = CourseResourceService()
-    res, err = course_resource_service.insertCourseResource(course_id=request_data["course_id"],
+    res, err = course_resource_service.insertCourseResource(course_id=int(request_data["course_id"]),
                                                             title=request_data["resource_title"],
                                                             filename=request_data["filename"],
                                                             uploader_id=request_data["uid"],
@@ -117,7 +116,7 @@ def deleteCourseResource():
     request_data = json.loads(request.form["json"])
 
     course_resource_service = CourseResourceService()
-    res, err = course_resource_service.deleteCourseResourceByFileId(file_id=request_data["file_id"])
+    res, err = course_resource_service.deleteCourseResourceByFileId(file_id=int(request_data["file_id"]))
 
     return_data = {
         "error_code": err

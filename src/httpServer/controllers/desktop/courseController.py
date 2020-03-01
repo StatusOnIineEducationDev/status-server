@@ -5,10 +5,10 @@ import json
 import os
 import random
 
-from src.httpServer.config.conf import *
-from src.edu import *
-from src.httpServer.services.courseService import CourseService
-from src.httpServer.services.joinCourseService import JoinCourseService
+from src.httpServer.conf.conf import COURSE_PICTURE_PATH
+from src.edu import ErrorCode
+from src.httpServer.services.mysql.courseService import CourseService
+from src.httpServer.services.mysql.joinCourseService import JoinCourseService
 
 # 建立蓝图
 course = Blueprint(name='course', import_name=__name__)
@@ -29,8 +29,7 @@ def getCourseBasicInfo():
     """
     request_data = json.loads(request.form["json"])
 
-    course_service = CourseService()
-    course_obj, err = course_service.getCourseByCourseId(course_id=request_data["course_id"])
+    course_obj, err = CourseService().getCourseByCourseId(course_id=int(request_data["course_id"]))
     return_data = {
         "error_code": err,
         "course_id": None,
@@ -38,8 +37,8 @@ def getCourseBasicInfo():
     }
 
     if course_obj is not None:
-        return_data["course_id"] = course_obj.id
-        return_data["create_timestamp"] = course_obj.create_timestamp
+        return_data["course_id"] = str(course_obj.id)
+        return_data["create_timestamp"] = int(course_obj.create_timestamp)
 
     return return_data
 
@@ -61,19 +60,18 @@ def createCourse():
     """
     request_data = json.loads(request.form["json"])
 
-    course_service = CourseService()
-    course_obj, err = course_service.insertCourse(course_name=request_data["course_name"],
-                                                  classify=request_data["classify"],
-                                                  creator_id=request_data["uid"],
-                                                  introduction=request_data["introduction"])
+    course_obj, err = CourseService().insertCourse(course_name=request_data["course_name"],
+                                                   classify=request_data["classify"],
+                                                   creator_id=int(request_data["uid"]),
+                                                   introduction=request_data["introduction"])
     if err == ErrorCode.NoError:
         join_course_service = JoinCourseService()
-        join_course_obj, err = join_course_service.insertJoinCourse(course_id=course_obj.id,
-                                                                    uid=request_data["uid"])
+        join_course_obj, err = join_course_service.insertJoinCourse(course_id=int(course_obj.id),
+                                                                    uid=int(request_data["uid"]))
 
     return_data = {
         "error_code": err,
-        "course_id": course_obj.id
+        "course_id": str(course_obj.id)
     }
 
     return return_data
@@ -105,9 +103,8 @@ def uploadCoursePicture():
     file_absolute_path = COURSE_PICTURE_PATH + "/" + file_relative_path
     request_file.save(file_absolute_path)
 
-    course_service = CourseService()
-    res, err = course_service.updateCoursePicture(course_id=request_data["course_id"],
-                                                  path=file_relative_path)
+    res, err = CourseService().updateCoursePicture(course_id=int(request_data["course_id"]),
+                                                   path=file_relative_path)
     return_data = {
         "error_code": err
     }
@@ -190,4 +187,3 @@ def getConcRankData():
 #     print(request.form["json"])
 #
 #     return return_data
-

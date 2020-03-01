@@ -1,6 +1,6 @@
 from flask import Flask
 
-from src.httpServer.config.conf import *
+from src.httpServer.conf.conf import *
 from src.httpServer.controllers.desktop.courseController import course
 from src.httpServer.controllers.desktop.courseResourceController import courseResource
 from src.httpServer.controllers.desktop.userController import user

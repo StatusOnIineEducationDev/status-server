@@ -1,11 +1,27 @@
-class MonitoringRecordDetail:
-    def __init__(self, id=None, record_id=None, course_id=None, lesson_id=None, uid=None, toward_score=None,
-                 emotion_score=None, record_timestamp=None):
-        self.id = id  # 记录的唯一标识
-        self.record_id = record_id  # 总记录的唯一标识
-        self.course_id = course_id  # 课程唯一标识
-        self.lesson_id = lesson_id  # 课程下课堂的唯一标识
-        self.uid = uid  # 用户的唯一标识
-        self.toward_score = toward_score  # 朝向得分
-        self.emotion_score = emotion_score  # 表情得分
-        self.record_timestamp = record_timestamp  # 该条记录的时间戳
+from sqlalchemy import Column, ForeignKey, text
+from sqlalchemy.dialects.mysql import INTEGER
+from sqlalchemy.orm import relationship
+
+from src.socketServer.utils.mysqlDb import Base
+
+
+class MonitoringRecordDetail(Base):
+    __tablename__ = 'monitoring_record_detail'
+
+    id = Column(INTEGER(11), primary_key=True, comment='记录的唯一标识')
+    record_id = Column(ForeignKey('monitoring_record.id', ondelete='CASCADE', onupdate='CASCADE'), nullable=False,
+                       index=True, server_default=text("'-1'"), comment='总记录的唯一标识')
+    course_id = Column(ForeignKey('course.id', ondelete='CASCADE', onupdate='CASCADE'), nullable=False, index=True,
+                       server_default=text("'-1'"), comment='课程的唯一标识')
+    lesson_id = Column(ForeignKey('lesson.id', ondelete='CASCADE', onupdate='CASCADE'), nullable=False, index=True,
+                       server_default=text("'-1'"), comment='课程下课堂的唯一标识')
+    uid = Column(ForeignKey('user.id', ondelete='CASCADE', onupdate='CASCADE'), nullable=False, index=True,
+                 server_default=text("'-1'"), comment='用户的唯一标识')
+    toward_score = Column(INTEGER(11), nullable=False, server_default=text("'-1'"), comment='朝向得分')
+    emotion_score = Column(INTEGER(11), nullable=False, server_default=text("'-1'"), comment='表情得分')
+    record_timestamp = Column(INTEGER(11), nullable=False, server_default=text("'-1'"), comment='该条记录的时间戳')
+
+    course = relationship('Course')
+    lesson = relationship('Lesson')
+    record = relationship('MonitoringRecord')
+    user = relationship('User')

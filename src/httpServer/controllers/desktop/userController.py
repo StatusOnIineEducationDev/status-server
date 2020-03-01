@@ -1,8 +1,8 @@
 from flask import request, Blueprint
 import json
 
-from src.httpServer.services.userService import UserService
-from src.httpServer.services.courseService import CourseService
+from src.httpServer.services.mysql.userService import UserService
+from src.httpServer.services.mysql.courseService import CourseService
 
 # 建立蓝图
 user = Blueprint(name='user', import_name=__name__)
@@ -25,32 +25,29 @@ def loginPC():
         {json}course_list
         {int}user_status
     """
-    request_data = json.loads(request.form["json"])
-
-    user_service = UserService()
-    user_obj, err = user_service.loginPC(account=request_data["account"],
-                                         pwd=request_data["pwd"],
-                                         account_type=request_data["account_type"])
+    request_data = json.loads(request.form['json'])
+    user_obj, err = UserService().loginPC(account=request_data['account'],
+                                          pwd=request_data['pwd'],
+                                          account_type=request_data['account_type'])
 
     return_data = {
-        "error_code": err,
-        "user_pic_url": None,
-        "uid": None,
-        "username": None,
-        "account_type": None,
-        "course_list": None,
-        "user_status": None
+        'error_code': err,
+        'user_pic_url': None,
+        'uid': None,
+        'username': None,
+        'account_type': None,
+        'course_list': None,
+        'user_status': None
     }
     if user_obj is not None:
-        course_service = CourseService()
-        course_list, err = course_service.getCourseBasicListByUid(uid=user_obj.id)
+        course_list, err = CourseService().getCourseBasicListByUid(uid=int(user_obj.id))
 
-        return_data["user_pic"] = "NULL"
-        return_data["uid"] = user_obj.id
-        return_data["username"] = user_obj.name
-        return_data["account_type"] = user_obj.type
-        return_data["course_list"] = course_list
-        return_data["user_status"] = user_obj.status
+        return_data['user_pic'] = 'NULL'
+        return_data['uid'] = str(user_obj.id)
+        return_data['username'] = user_obj.name
+        return_data['account_type'] = user_obj.type
+        return_data['course_list'] = course_list
+        return_data['user_status'] = user_obj.status
 
     return return_data
 
@@ -67,14 +64,13 @@ def getCourseList():
         {int}error_code
         {json}course_list
     """
-    request_data = json.loads(request.form["json"])
+    request_data = json.loads(request.form['json'])
 
-    course_service = CourseService()
-    course_list, err = course_service.getCourseBasicListByUid(request_data["uid"])
+    course_list, err = CourseService().getCourseBasicListByUid(int(request_data['uid']))
 
     return_data = {
-        "error_code": err,
-        "course_list": course_list
+        'error_code': err,
+        'course_list': course_list
     }
 
     return return_data
